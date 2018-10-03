@@ -1,0 +1,50 @@
+
+import sys
+import asyncio
+
+async def handle_machine_client(reader, writer):
+    print('Machine connected...')
+    
+    writer.write('echo $FIELDTEST_IDENTIFIER\n'.encode('utf-8'))
+    await writer.drain()
+
+    print('Requested field test identifier...')
+
+    response = await reader.readline()
+
+    print('Response received: ' + response.decode('utf-8'))
+    writer.close()
+
+async def handle_service_client(reader, writer):
+    pass 
+
+def main(argv):
+    host = '192.168.0.231'
+    machine_listen_port = 10000
+    service_listen_port = 10001
+
+    machine_server_coro = asyncio.start_server(handle_machine_client, host=host,
+            port=machine_listen_port, reuse_address=True, reuse_port=True) 
+    service_server_coro = asyncio.start_server(handle_service_client, host=host,
+            port=machine_listen_port, reuse_address=True, reuse_port=True)
+
+    loop = asyncio.get_event_loop()
+
+    machine_server = loop.run_until_complete(machine_server_coro)
+    service_server = loop.run_until_complete(service_server_coro)
+
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
+
+    machine_server.close()
+    loop.run_until_complete(machine_server.wait_closed())
+
+    service_server.close()
+    loop.run_until_complete(service_server.wait_closed())
+
+    loop.close()
+
+if __name__ == '__main__':
+    main(sys.argv)
