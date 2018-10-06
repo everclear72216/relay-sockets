@@ -1,0 +1,36 @@
+
+relayserver:
+    listen_interface_ip: 127.0.0.1
+
+    machine:
+        port: 10000
+        reuse_port: true
+        reuse_address: true
+
+    service:
+        port: 10001
+        reuse_port: true
+        reuse_address: true
+
+    http:
+        port: 8080
+
+logging:
+    version: 1
+    disable_existing_loggers: true
+
+    formatters:
+        simple:
+            format: '%(asctime)s (%(levelname)-5s) %(name)s: %(message)s'
+            datefmt: '%Y-%m-%d %H:%M:%S'
+
+    handlers:
+        console:
+            level: DEBUG
+            formatter: simple
+            stream: ext://sys.stdout
+            class: logging.StreamHandler
+
+    root:
+        level: DEBUG
+        handlers: [console]
