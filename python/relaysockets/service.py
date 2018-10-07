@@ -70,14 +70,14 @@ class Service(object):
                 received = await self.read(1)
 
             self.logger.debug('end-of-line received')
-            return data.decode('utf-8').strip()
+            return data.decode('latin-1').strip()
 
         except ConnectionError:
-            self.logger.exception('reading from service failed')
+            self.logger.exception('reading input from service failed')
             return ''
 
         except asyncio.CancelledError:
-            self.logger.exception('reading from service canceled')
+            self.logger.info('reading input service canceled')
             raise
 
     async def write(self, data, **kwargs):
@@ -102,6 +102,10 @@ class Service(object):
             self.logger.info('writing to service canceled')
             raise
 
+        except Exception:
+            self.logger.exception('unknown error writing to service')
+            raise
+
     async def wait_machine(self):
         self.logger.debug('started waiting for machine')
         event = await self.machine_queue.get()
@@ -110,7 +114,7 @@ class Service(object):
 
     async def list_machines(self, machines):
         for idx, machine in enumerate(machines):
-            await self.write('{}: {}\r\n'.format(idx, machine.get_id()), encode='utf-8')
+            await self.write('{}: {}\r\n'.format(idx, machine.get_id()), encode='latin-1')
 
     async def choose_machine(self, machines):
         self.logger.info('started choosing machine')
@@ -126,10 +130,10 @@ class Service(object):
             if machines:
                 self.logger.debug('presenting machines')
                 await self.list_machines(machines)
-                await self.write('Choose machine by index: ', encode='utf-8')
+                await self.write('Choose machine by index: ', encode='latin-1')
             else:
                 self.logger.debug('presenting no machines')
-                await self.write('Waiting for machine...\r\n', encode='utf-8')
+                await self.write('Waiting for machine...\r\n', encode='latin-1')
 
             self.logger.debug('waiting for machine or input')
             message_task = asyncio.get_event_loop().create_task(self.read_input())
@@ -169,7 +173,7 @@ class Service(object):
 
                     else:
                         self.logger.debug('client entered choice without machine')
-                        await self.write('Invalid choice!\r\n', encode='utf-8')
+                        await self.write('Invalid choice!\r\n', encode='latin-1')
 
                 else:
                     self.logger.debug('client disconnected')

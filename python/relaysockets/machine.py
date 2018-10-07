@@ -82,7 +82,7 @@ class Machine(object):
         if data:
             self.logger.info('received identification')
 
-            self.id =  data.decode('utf-8').strip()
+            self.id =  data.decode('latin-1').strip()
             self.logger = logging.getLogger('machine[{}]'.format(self.id))
 
         else:

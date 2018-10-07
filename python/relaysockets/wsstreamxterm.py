@@ -17,7 +17,7 @@ class WSStreamXTerm(object):
         self.logger = logging.getLogger('WSStreamXTerm')
 
     def write(self, data, **kwargs):
-        self.write_buffer.extend(list(data.decode('utf-8')))
+        self.write_buffer.extend(list(data.decode('latin-1')))
 
     def close(self):
         loop = asyncio.get_event_loop()
@@ -64,9 +64,16 @@ class WSStreamXTerm(object):
             for i in range(count):
                 output.append(self.read_buffer.pop(0))
 
-        return ''.join(output).encode('utf-8')
+        return ''.join(output).encode('latin-1')
 
     async def drain(self):
+        self.logger.debug('draining to websocket')
+
         payload = ['stdout', ''.join(self.write_buffer)]
+
+        self.logger.debug('payload: {}'.format(payload))
+
         await self.websocket.send_json(payload)
-        self.send_buffer = []
+        self.write_buffer = []
+
+        self.logger.debug('write buffer drained')

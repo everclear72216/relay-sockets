@@ -9,15 +9,24 @@
     <body>
         <div id="terminal"></div>
         <script>
-            var term, sock;
+            var term, sock, sockurl;
+
+            sockurl = 'ws://'
+            sockurl = sockurl + location.hostname
+            sockurl = sockurl + ((typeof(location.port) === 'undefined') ? '' : location.port)
+            sockurl = sockurl + '/websocket'
 
             terminado.apply(Terminal)
-
             term = new Terminal();
-            sock = new WebSocket('ws://www.martinbertsche.com/websocket');
+            sock = new WebSocket(sockurl);
+
+            term.setOption('disableStdin', true)
 
             term.on('key', (key, ev) => {
-                term.write(key);
+                if(key === '\r') {
+                    key = key + '\n';
+                }
+                sock.send(JSON.stringify(['stdin', key]))            
             });
 
             sock.addEventListener('open', () => {

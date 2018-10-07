@@ -33,7 +33,7 @@ class Relay(object):
         service_write = None
 
         try:
-            await self.service.write('relay established\r\n', encode='utf-8')
+            await self.service.write('relay established\r\n', encode='latin-1')
 
         except ConnectionError:
             self.logger.error('writing to service failed')
