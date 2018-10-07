@@ -1,0 +1,7 @@
+{
+    "name": "relayserver-webinterface",
+    "version": "0.0.1",
+    "dependencies": {
+        "xterm": "^3.8.0"
+    }
+}

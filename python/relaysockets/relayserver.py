@@ -2,9 +2,13 @@
 import asyncio
 import logging
 
+from aiohttp import web
+
 from relay import Relay
 from machine import Machine
 from service import Service
+
+from wsstreamxterm import WSStreamXTerm
 
 from exceptions import MachineDisconnectedException
 from exceptions import ServiceDisconnectedException
@@ -65,61 +69,74 @@ class RelayServer(object):
             self.services.pop(self.services.index(service))
 
     async def start(self):
-        self.logger.info('started relay server')
+        self.logger.info('starting relay server')
 
         try:
-            async def handle_machine_client(reader, writer):
-                try:
-                    await self.machine_connected(reader, writer)
-                except Exception as exc:
-                    self.logger.exception('fatal error handling machine.')
+            web_app = web.Application()
+            web_app.add_routes([
+                web.static('/app', self.config['http']['home']),
+                web.get('/websocket', self.websocket_connected)
+            ])
 
-                    raise exc
+            web_runner = web.AppRunner(web_app)
+            await web_runner.setup()
 
-            async def handle_service_client(reader, writer):
-                try:
-                    await self.service_connected(reader, writer)
-                except Exception as exc:
-                    self.logger.exception('fatal error handling service.')
+            web_site = web.TCPSite(web_runner,
+                self.config['listen_interface_ip'],
+                self.config['http']['port'])
 
-                    raise exc
+            await web_site.start()
+            self.logger.debug('relay website started')
 
-            machine_coro = asyncio.start_server(handle_machine_client,
+            await asyncio.start_server(self.machine_connected,
                 port=int(self.config['machine']['port']),
                 host=str(self.config['listen_interface_ip']),
                 reuse_port=bool(self.config['machine']['reuse_port']),
                 reuse_address=bool(self.config['machine']['reuse_address']))
+            self.logger.debug('machine server started')
 
-            service_coro = asyncio.start_server(handle_service_client,
+            await asyncio.start_server(self.service_connected,
                 port=int(self.config['service']['port']),
                 host=str(self.config['listen_interface_ip']),
                 reuse_port=bool(self.config['service']['reuse_port']),
                 reuse_address=bool(self.config['service']['reuse_address']))
+            self.logger.debug('service server started')
 
-            self.logger.debug('starting machine listener')
-            machine_task = asyncio.get_event_loop().create_task(machine_coro)
-
-            self.logger.debug('starting service listener')
-            service_task = asyncio.get_event_loop().create_task(service_coro)
-
-            tasks = [machine_task, service_task]
-            done, pending = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-
-            self.machine_server = machine_task.result()
-            self.service_server = service_task.result()
-
-            self.logger.info('listeners running')
+            self.logger.info('relay server started')
 
         except asyncio.CancelledError:
-            self.logger.info('start procedure cancelled')
+            self.logger.info('start relay server cancelled')
 
             for task in tasks:
                 task.cancel()
 
             raise
 
+        except Exception:
+            self.logger.exception('unknown error starting relay server')
+            raise
+
     async def stop(self):
         pass
+
+    async def websocket_connected(self, request):
+        self.logger.info('websocket connected')
+
+        try:
+            self.logger.debug('creating websocket stream')
+            stream = WSStreamXTerm(request)
+
+            self.logger.debug('starting websocket stream')
+            await stream.start()
+
+            self.logger.debug('handling websocket as service')
+            await self.service_connected(stream, stream)
+            
+        except Exception:
+            self.logger.exception('error handling websocket')
+            raise
+
+        return stream.get_websocket()
 
     async def machine_connected(self, reader, writer):
         self.logger.info('machine connected')

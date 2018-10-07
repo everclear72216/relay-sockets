@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="node_modules/xterm/dist/xterm.css" />          
+        <script src="node_modules/xterm/dist/xterm.js"></script>
+        <script src="node_modules/xterm/dist/addons/terminado/terminado.js"></script>
+    </head>
+    <body>
+        <div id="terminal"></div>
+        <script>
+            var term, sock;
+
+            terminado.apply(Terminal)
+
+            term = new Terminal();
+            sock = new WebSocket('ws://127.0.0.1:8080/websocket');
+
+            term.on('key', (key, ev) => {
+                term.write(key);
+            });
+
+            sock.addEventListener('open', () => {
+                term.open(document.getElementById('terminal'));
+                term.terminadoAttach(sock, true, false)
+            });
+        </script>
+    </body>
+</html>
