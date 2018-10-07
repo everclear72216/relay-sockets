@@ -1,6 +1,6 @@
 
 relayserver:
-    listen_interface_ip: 127.0.0.1
+    listen_interface_ip: 0.0.0.0
 
     machine:
         port: 10000
@@ -13,7 +13,7 @@ relayserver:
         reuse_address: true
 
     http:
-        port: 8080
+        port: 80
         home: '/home/martin/projects/work/relay-sockets/www'
 
 logging:

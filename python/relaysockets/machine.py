@@ -55,7 +55,7 @@ class Machine(object):
         try:
             return await self.reader.read(count)
 
-        except asyncio.ConnectionError:
+        except ConnectionError:
             self.logger.exception('reading from machine failed')
             return bytes()
 
@@ -68,7 +68,7 @@ class Machine(object):
             self.writer.write(data)
             await self.writer.drain()
 
-        except asyncio.ConnectionError:
+        except ConnectionError:
             self.logger.exception('writing to machine failed')
             raise
 

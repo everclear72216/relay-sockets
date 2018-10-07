@@ -40,7 +40,7 @@ class Service(object):
             self.logger.debug('read data: {}'.format(data))
             return data
 
-        except asyncio.ConnectionError:
+        except ConnectionError:
             self.logger.exception('reading from service failed')
             return byte()
 
@@ -72,7 +72,7 @@ class Service(object):
             self.logger.debug('end-of-line received')
             return data.decode('utf-8').strip()
 
-        except asyncio.ConnectionError:
+        except ConnectionError:
             self.logger.exception('reading from service failed')
             return ''
 
@@ -94,7 +94,7 @@ class Service(object):
 
             self.logger.debug('data written: {}'.format(data))
 
-        except asyncio.ConnectionError:
+        except ConnectionError:
             self.logger.exception('writing to service failed')
             raise
 

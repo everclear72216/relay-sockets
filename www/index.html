@@ -14,7 +14,7 @@
             terminado.apply(Terminal)
 
             term = new Terminal();
-            sock = new WebSocket('ws://127.0.0.1:8080/websocket');
+            sock = new WebSocket('ws://www.martinbertsche.com/websocket');
 
             term.on('key', (key, ev) => {
                 term.write(key);
