@@ -23,9 +23,6 @@
             term.setOption('disableStdin', true)
 
             term.on('key', (key, ev) => {
-                if(key === '\r') {
-                    key = key + '\n';
-                }
                 sock.send(JSON.stringify(['stdin', key]))            
             });
 
