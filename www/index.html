@@ -13,7 +13,7 @@
 
             sockurl = 'ws://'
             sockurl = sockurl + location.hostname
-            sockurl = sockurl + ((typeof(location.port) === 'undefined') ? '' : location.port)
+            sockurl = sockurl + ((typeof(location.port) === 'undefined') ? '' : (':' + location.port))
             sockurl = sockurl + '/websocket'
 
             terminado.apply(Terminal)
@@ -27,9 +27,18 @@
             });
 
             sock.addEventListener('open', () => {
-                term.open(document.getElementById('terminal'));
                 term.terminadoAttach(sock, true, false)
             });
+
+            sock.addEventListener('error', (ev) => {
+                term.write('Websocket connection error\r\n');
+            });
+
+            sock.addEventListener('close', (ev) => {
+                term.write('Websocket closed: code: ' + ev.code + ', reason: ' + ev.reason + '\r\n');
+            });
+
+            term.open(document.getElementById('terminal'));
         </script>
     </body>
 </html>
